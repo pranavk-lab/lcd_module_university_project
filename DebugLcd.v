@@ -5,11 +5,13 @@ input clk, rst;//general signals
 output reg rs_lcd,rw_lcd; 
 output en_lcd;
 output on_lcd;
-reg on_lcd = 1'b1;
+reg on_lcd;
+reg rs_lcd_next, rw_lcd_next;
+
 inout [7:0]data_lcd;
 reg oe;
-reg [7:0] BusyFlag, DataWrite;
-assign data_lcd = oe ? DataWrite : 1'bZ;//lcd
+reg [7:0] BusyFlag, DataWrite, DataWrite_next;
+assign data_lcd = oe ? DataWrite : 8'bz;//lcd
 
 
 
@@ -48,9 +50,15 @@ begin
 			stateInitialized <= DataWriteP;
 			red_led <= 1'b1;
 			green_led <= 1'b0;
+			oe <= 1'b0;
+			rs_lcd <= 1'b0;
+			rw_lcd <= 1'b0;
+			on_lcd <= 1'b0;
+			DataWrite <= 8'b00000001;
 		end
 		else
 		begin
+			on_lcd <= 1'b1;
 			red_led <= 1'b0;
 			case(state)
 			FirstStep : begin
@@ -165,7 +173,7 @@ begin
 																					DataWrite <= 8'b01000001;
 																					EnableLatch <= 1'b1;
 																						stateInitialized <= LatchingDelay;
-																						stateNext <= DataWriteN;
+																						stateNext<= DataWriteN;
 																						state <= InitializationComplete;
 																				  DisableLatch <= 1'b0;
 																				end
@@ -255,7 +263,7 @@ begin
 																					DataWrite <= 8'b01010110;
 																					EnableLatch <= 1'b1;
 																						stateInitialized <= LatchingDelay;
-																						stateNext <= RefreshDisplay;//changed for debug
+																						stateNext <= RefreshDisplay;
 																						state <= InitializationComplete;
 																				  DisableLatch <= 1'b0;
 																				end
@@ -283,11 +291,11 @@ begin
 																					rs_lcd <= 1'b0;
 																					rw_lcd <= 1'b0;
 																					DataWrite <= 8'b00000010;
-																					EnableLatch <= 1'b1;
-																					stateInitialized <= LatchingDelay;
+																					EnableRefresh <= 1'b1;
+																					stateInitialized <= RefreshDisplay;
 																					stateNext <= DataWriteP;
 																					state <= InitializationComplete;
-																					DisableLatch <= 1'b0;
+																					DisableRefresh<= 1'b0;
 																				end
 																				else
 																				begin
@@ -302,7 +310,8 @@ begin
 													RefreshDisplay: begin
 																					oe <= 1'b0;
 																					rs_lcd <= 1'b0;
-																					rw_lcd <= 1'b1;
+																					rw_lcd <= 1'b0;
+																					DataWrite <= 8'b00000001;
 																					stateInitialized <= RefreshDisplay;
 																					state <= InitializationComplete;
 																			      
@@ -310,7 +319,7 @@ begin
 																					if(flagHome == 1'b1)
 																					begin
 																						DisableRefresh <= 1'b1;
-																						stateInitialized <= DataWriteP;
+																						stateInitialized <= stateNext;
 																						state <= InitializationComplete;
 																					end
 																					else
@@ -323,7 +332,10 @@ begin
 																		end
 													LatchingDelay : begin
 																			      
-																					
+																					//oe <= 1'b1;
+																					//rs_lcd <= rs_lcd_next;
+																					//rw_lcd <= rw_lcd_next;
+																					//DataWrite <= DataWrite_next;
 																					if(flagLatch == 1'b1)
 																					begin
 																						DisableLatch <= 1'b1;
