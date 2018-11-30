@@ -1,0 +1,85 @@
+module DebugLcd(clk, rst, rs_lcd, rw_lcd, en_lcd, on_lcd,data_lcd, BusyFlag);
+input clk,rst;
+output rs_lcd,rw_lcd, en_lcd, on_lcd;
+output [6:0]data_lcd;
+reg state;
+inout BusyFlag;
+reg rs_lcd,rw_lcd, en_lcd, on_lcd;
+reg [6:0]data_lcd;
+reg oe, BusyIn, BusyOut;
+
+assign BusyFlag = oe ? BusyOut : 1'bZ;
+
+always @(posedge clk)
+begin
+ oe <= 1'b0;
+ if (rst == 1'b0)
+   begin
+     
+      rs_lcd <= 1'b0;
+         rw_lcd <= 1'b0;
+         en_lcd <= 1'b0;
+         on_lcd <= 1'b0;
+         data_lcd <= 7'b0110000;
+         BusyOut <= 1'b0;
+   end
+ else
+   begin
+     case(state)
+     1'b0 : 	begin
+     		if (BusyFlag == 1'b0)
+       			begin
+         			                  
+	 			oe <= 1'b1;
+         			rs_lcd <= 1'b0;
+         			rw_lcd <= 1'b0;
+         			en_lcd <= 1'b1;
+         			on_lcd <= 1'b1;
+         			data_lcd <= 7'b0110000;
+         			BusyOut <= 1'b0;
+				state <= 1'b1;
+         
+       			end
+     		else
+			begin
+          			
+      				rs_lcd <= 1'b0;
+         			rw_lcd <= 1'b0;
+         			en_lcd <= 1'b0;
+         			on_lcd <= 1'b0;
+         			data_lcd <= 7'b0110000;
+         			BusyOut <= 1'b0;
+        		end
+    		end
+	1'b1 :	begin
+		
+		if (BusyFlag == 1'b0)
+       			begin
+         			                 
+	 			oe <= 1'b1;
+         			rs_lcd <= 1'b0;
+         			rw_lcd <= 1'b0;
+         			en_lcd <= 1'b1;
+         			on_lcd <= 1'b1;
+         			data_lcd <= 7'b0001110;
+         			BusyOut <= 1'b0;
+				state <= 1'b1;
+         
+       			end
+     		else
+			begin
+          			
+      				rs_lcd <= 1'b0;
+         			rw_lcd <= 1'b0;
+         			en_lcd <= 1'b0;
+         			on_lcd <= 1'b0;
+         			data_lcd <= 7'b0110000;
+         			BusyOut <= 1'b0;
+        		end
+    		end
+	endcase
+	end
+
+      
+end 
+endmodule 
