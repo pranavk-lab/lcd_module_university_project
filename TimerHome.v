@@ -2,7 +2,7 @@
 //Pranav Kulkarni
 //1ms timer
 //Generates a 1ms pulse every 100us time interval when EnableCount is pulled high
-module TimerHome(clock,rst,EnableCount,DisableCount, TimerIndicator);
+module TimerSetup(clock,rst,EnableCount,DisableCount, TimerIndicator);
   input clock, rst, EnableCount, DisableCount;
   output TimerIndicator;
   
@@ -52,7 +52,7 @@ module TimerHome(clock,rst,EnableCount,DisableCount, TimerIndicator);
     			 LFSR[13] <= LFSR[12];
     			 LFSR[14] <= LFSR[13];
     			 LFSR[15] <= LFSR[14];
-                         if(LFSR == 16'ha593)//sequence that indicates 100us mark
+                         if(LFSR == 16'h68a6)//sequence that indicates 100us mark
                              begin
                              TimerIndicator <= 1'b1;
                              state <= RestartCount;

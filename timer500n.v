@@ -16,7 +16,7 @@ module timer4u(clock,rst,EnableCount, enable_lcd);
  
   always @(posedge clock)
   begin
-      if(rst == 0)
+      if(rst == 0 )
       begin
         LFSR <= 16'hffff;
         TimerIndicator <= 1'b0;
