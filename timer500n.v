@@ -20,6 +20,7 @@ module timer4u(clock,rst,EnableCount, enable_lcd);
       begin
         LFSR <= 16'hffff;
         TimerIndicator <= 1'b0;
+		  state <= IDLE;
       end
       else
         begin

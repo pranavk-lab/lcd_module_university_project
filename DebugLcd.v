@@ -4,13 +4,11 @@ input clk, rst;//general signals
 //lcd
 output reg rs_lcd,rw_lcd; 
 output en_lcd;
-output on_lcd;
-reg on_lcd;
-reg rs_lcd_next, rw_lcd_next;
+output reg on_lcd;
 reg en_oe, en_lcd_set;
 inout [7:0]data_lcd;
 reg oe;
-reg [7:0] BusyFlag, DataWrite, DataWrite_next;
+reg [7:0] DataWrite;
 assign data_lcd = oe ? DataWrite : 8'bz;//lcd
 assign en_lcd = en_oe ? en_lcd_gen : en_lcd_set;//enable control
 reg [4:0] count;
@@ -47,17 +45,21 @@ begin
 		if(rst == 1'b0)
 		begin
 			state <= FirstStep;
-			stateInitialized <= DataWriteP;
+			stateInitialized <= SetupDelay;
+			stateNext <= DataWriteP;
 			red_led <= 1'b1;
 			green_led <= 1'b0;
-			oe <= 1'b0;
+			oe <= 1'b1;
 			rs_lcd <= 1'b0;
 			rw_lcd <= 1'b0;
 			on_lcd <= 1'b0;
 			DataWrite <= 8'b00000001;
 			
 			en_oe <= 1'b1;
-			
+			EnableLatch <= 1'b1;
+			DisableLatch <= 1'b0;
+			EnableSetup <= 1'b1;
+			DisableSetup <= 1'b0;
 		end
 		else
 		begin
@@ -76,6 +78,10 @@ begin
 									state <= SecondStep;
 								
 								end
+								else
+								begin
+									state <= FirstStep;
+								end
 							
 							end
 			SecondStep : begin
@@ -89,6 +95,10 @@ begin
 									rs_lcd <= 1'b0;
 									state <= ThirdStep;
 								end
+								else
+								begin
+									state <= SecondStep;
+								end
 						
 							end
 			ThirdStep : begin
@@ -101,6 +111,10 @@ begin
 									rs_lcd <= 1'b0;
 									state <= InitializationComplete;
 									
+								end
+								else
+								begin
+									state <= ThirdStep;
 								end
 						
 							end
@@ -293,7 +307,7 @@ begin
 																			begin
 											
 																					
-																					count <= count +1;
+																					count <= count +1;//to make sure data holds after enable is gnded
 																					en_lcd_set <= 1'b0;
 																					if(count == 5'b11111)
 																					begin
@@ -336,9 +350,11 @@ begin
 													default : begin 
 																		oe <= 1'b0;//changed for debug
 																		en_oe <= 1'b0;
-																		rs_lcd <= 1'b0;
-																		rw_lcd <= 1'b1;
-																		stateInitialized <= DataWriteP;
+																		rs_lcd <= 1'b1;
+																		rw_lcd <= 1'b0;
+																		stateInitialized <= SetupDelay;
+																		DataWrite <= 8'b01010000;
+																		stateNext <= DataWriteP;
 																		state <= InitializationComplete;
 																			end
 												endcase//end case-2
@@ -347,6 +363,7 @@ begin
 											 end//InitializationComplete state
 				default : begin state <= FirstStep;
 										en_oe <= 1'b1;
+										
 										end
 			endcase//end case-1
 		end//end else reset == 1

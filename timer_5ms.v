@@ -18,6 +18,7 @@ module timer_5ms(clock,rst,EnableCount, TimerIndicator);
       begin
         LFSR <= 16'hffff;
         TimerIndicator <= 1'b0;
+		  state <= IDLE;
       end
       else
         begin

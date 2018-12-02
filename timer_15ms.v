@@ -18,6 +18,7 @@ module timer_15ms(clock,rst,EnableCount, TimerIndicator);
       begin
         LFSR <= 16'hffff;
         TimerIndicator <= 1'b0;
+		  state <= IDLE;
       end
       else
         begin
@@ -52,7 +53,7 @@ module timer_15ms(clock,rst,EnableCount, TimerIndicator);
     			 LFSR[13] <= LFSR[12];
     			 LFSR[14] <= LFSR[13];
     			 LFSR[15] <= LFSR[14];
-                         if(LFSR == 16'b1011100000101010)//sequence that indicates 100us mark
+                         if(LFSR == 16'b1011100000101010)//sequence that indicates 15ms mark
                              begin
                              TimerIndicator <= 1'b1;
                              state <= RestartCount;

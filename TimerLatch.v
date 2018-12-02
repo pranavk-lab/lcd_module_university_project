@@ -18,6 +18,7 @@ module TimerLatch(clock,rst,EnableCount,DisableCount, TimerIndicator);
       begin
         LFSR <= 16'hffff;
         TimerIndicator <= 1'b0;
+		  state <= IDLE;
       end
       else
         begin
