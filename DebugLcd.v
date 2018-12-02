@@ -15,9 +15,9 @@ reg [4:0] count;
 
 
 //states
-reg [3:0]stateInitialized, stateNext;
-reg [1:0] state;
-parameter DataWriteP = 0, DataWriteR = 1,DataWriteA = 2,DataWriteN = 3,DataWriteAA = 4,DataWriteV = 5, GoHome = 6, TriggerDelay = 7, SetupDelay = 8;
+reg [4:0]state, stateNext;
+
+parameter DataWriteP = 4, DataWriteR = 5,DataWriteA = 6,DataWriteN = 7,DataWriteAA = 8,DataWriteV = 9, GoHome = 4'ha, TriggerDelay = 4'hb, SetupDelay = 4'hc, DataWritePr = 4'hd;
 parameter FirstStep = 0, SecondStep = 1, ThirdStep = 2, InitializationComplete = 3;
 
 
@@ -45,8 +45,6 @@ begin
 		if(rst == 1'b0)
 		begin
 			state <= FirstStep;
-			stateInitialized <= SetupDelay;
-			stateNext <= DataWriteP;
 			red_led <= 1'b1;
 			green_led <= 1'b0;
 			oe <= 1'b1;
@@ -56,10 +54,7 @@ begin
 			DataWrite <= 8'b00000001;
 			
 			en_oe <= 1'b1;
-			EnableLatch <= 1'b1;
-			DisableLatch <= 1'b0;
-			EnableSetup <= 1'b1;
-			DisableSetup <= 1'b0;
+			
 		end
 		else
 		begin
@@ -109,8 +104,8 @@ begin
 									en_oe <= 1'b1;
 									rw_lcd <= 1'b0;
 									rs_lcd <= 1'b0;
-									state <= InitializationComplete;
-									
+									state <= DataWriteP;
+								
 								end
 								else
 								begin
@@ -118,8 +113,7 @@ begin
 								end
 						
 							end
-			InitializationComplete : begin
-												case(stateInitialized)
+			
 											
 													DataWriteP : begin
 																				en_oe <= 1'b0;
@@ -131,21 +125,21 @@ begin
 																					oe <= 1'b1;
 																					rs_lcd <= 1'b1;
 																					rw_lcd <= 1'b0;
-																					DataWrite <= 8'b01010000;
+																					DataWrite <= 8'b00100000;
 																					en_lcd_set <= 1'b0;
 																					
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
-																						stateInitialized <= SetupDelay;
-																						stateNext <= DataWriteR;
-																						state <= InitializationComplete;
+																						state <= SetupDelay;
+																						stateNext <= DataWritePr;
+																						
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
 																				begin
-																					stateInitialized <= DataWriteP;
-																					state <= InitializationComplete;
+																					state <= DataWriteP;
+																					
 																				end
 																			
 																		
@@ -167,15 +161,15 @@ begin
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
-																						stateInitialized <= SetupDelay;
+																						state <= SetupDelay;
 																						stateNext <= DataWriteA;
-																						state <= InitializationComplete;
+																						
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
 																				begin
-																					stateInitialized <= DataWriteP;
-																					state <= InitializationComplete;
+																					state <= DataWriteR;
+																					
 																				end
 																			
 																		
@@ -196,15 +190,15 @@ begin
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
-																						stateInitialized <= SetupDelay;
+																						state <= SetupDelay;
 																						stateNext <= DataWriteN;
-																						state <= InitializationComplete;
+																						
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
 																				begin
-																					stateInitialized <= DataWriteP;
-																					state <= InitializationComplete;
+																					state <= DataWriteA;
+																					
 																				end
 																			
 																		
@@ -225,15 +219,15 @@ begin
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
-																						stateInitialized <= SetupDelay;
+																						state <= SetupDelay;
 																						stateNext <= DataWriteAA;
-																						state <= InitializationComplete;
+																						
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
 																				begin
-																					stateInitialized <= DataWriteP;
-																					state <= InitializationComplete;
+																					state <= DataWriteN;
+																					
 																				end
 																			
 																		
@@ -254,15 +248,15 @@ begin
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
-																						stateInitialized <= SetupDelay;
+																						state <= SetupDelay;
 																						stateNext <= DataWriteV;
-																						state <= InitializationComplete;
+																						
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
 																				begin
-																					stateInitialized <= DataWriteP;
-																					state <= InitializationComplete;
+																					state <= DataWriteAA;
+																					
 																				end
 																			
 																		
@@ -283,8 +277,72 @@ begin
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
-																						stateInitialized <= SetupDelay;
+																						state <= SetupDelay;
 																						stateNext <= GoHome;
+																						
+																				  DisableSetup <= 1'b0;
+																				end
+																				else
+																				begin
+																					state <= DataWriteV;
+																					
+																				end
+																			
+																		
+																		end
+													DataWritePr : begin
+																				en_oe <= 1'b0;
+																				oe <= 1'b0;
+																				rs_lcd <= 1'b0;
+																				rw_lcd <= 1'b1;
+																				if(data_lcd[7] == 1'b0)
+																				begin
+																					oe <= 1'b1;
+																					rs_lcd <= 1'b1;
+																					rw_lcd <= 1'b0;
+																					
+																					en_lcd_set <= 1'b0;
+																					DataWrite <= 8'b01010000;
+																					EnableLatch <= 1'b1;
+																					DisableLatch <= 1'b0;
+																					EnableSetup <= 1'b1;
+																						state <= SetupDelay;
+																						stateNext <= DataWriteR;
+																						
+																				  DisableSetup <= 1'b0;
+																				end
+																				else
+																				begin
+																					state <= DataWritePr;
+																					
+																				end
+																			
+																		
+																		end
+													GoHome : begin
+																	en_oe <= 1'b0;
+																	en_lcd_set <= 1'b0;
+																	
+																	state <= GoHome;
+																		end
+													/*GoNextLine : begin
+																		en_oe <= 1'b0;
+																				oe <= 1'b0;
+																				rs_lcd <= 1'b0;
+																				rw_lcd <= 1'b1;
+																				if(data_lcd[7] == 1'b0)
+																				begin
+																					oe <= 1'b1;
+																					rs_lcd <= 1'b0;
+																					rw_lcd <= 1'b0;
+																					
+																					en_lcd_set <= 1'b0;
+																					DataWrite <= 8'b11000000;
+																					EnableLatch <= 1'b1;
+																					DisableLatch <= 1'b0;
+																					EnableSetup <= 1'b1;
+																						stateInitialized <= SetupDelay;
+																						stateNext <= DataWriteV;
 																						state <= InitializationComplete;
 																				  DisableSetup <= 1'b0;
 																				end
@@ -295,13 +353,7 @@ begin
 																				end
 																			
 																		
-																		end
-													GoHome : begin
-																	en_oe <= 1'b0;
-																	en_lcd_set <= 1'b0;
-																	state <= InitializationComplete;
-																	stateInitialized <= GoHome;
-																		end
+																		end*/
 													TriggerDelay: begin
 																			if(FlagHold == 1'b1)
 																			begin
@@ -311,15 +363,15 @@ begin
 																					en_lcd_set <= 1'b0;
 																					if(count == 5'b11111)
 																					begin
-																					stateInitialized <= stateNext;
-																					state <= InitializationComplete;
+																					state <= stateNext;
+																					
 																					DisableLatch <= 1'b1;
 																					end
 																			end
 																			else
 																			begin
-																					state <= InitializationComplete;
-																					stateInitialized <= TriggerDelay;
+																					
+																					state <= TriggerDelay;
 																				
 																			 end
 																			 
@@ -332,35 +384,25 @@ begin
 																						
 																						en_lcd_set <= 1'b1;
 																						count <= 5'b00000;
-																						stateInitialized <= TriggerDelay;
-																						state <= InitializationComplete;
+																						state <= TriggerDelay;
+																						
 																						DisableSetup <= 1'b1;
 																					end
 																					else
 																					begin
-																						state <= InitializationComplete;
-																						stateInitialized <= SetupDelay;
+																						
+																						state <= SetupDelay;
 																					end
 																				
 																					
 																			
 																		end					
 																	
-																
-													default : begin 
-																		oe <= 1'b0;//changed for debug
-																		en_oe <= 1'b0;
-																		rs_lcd <= 1'b1;
-																		rw_lcd <= 1'b0;
-																		stateInitialized <= SetupDelay;
-																		DataWrite <= 8'b01010000;
-																		stateNext <= DataWriteP;
-																		state <= InitializationComplete;
-																			end
-												endcase//end case-2
+												
+												
 												
 											
-											 end//InitializationComplete state
+											 
 				default : begin state <= FirstStep;
 										en_oe <= 1'b1;
 										
