@@ -1,8 +1,8 @@
-module DebugLcd(clk, rst, rs_lcd, rw_lcd, en_lcd, on_lcd,data_lcd, red_led, green_led, switch_up);
+module DebugLcd(clk, rst, rs_lcd, rw_lcd, en_lcd, on_lcd,data_lcd, red_led, green_led, BotNextLine, BotNew);
 input clk, rst;//general signals
 
 //debug
-input switch_up;
+input BotNextLine, BotNew;
 
 
 //lcd
@@ -16,12 +16,12 @@ reg [7:0] DataWrite;
 assign data_lcd = oe ? DataWrite : 8'bz;//lcd
 assign en_lcd = en_oe ? en_lcd_gen : en_lcd_set;//enable control
 reg [4:0] count;
-
+reg GoVariable, GoBack;
 
 //states
-reg [4:0]state, stateNext;
+reg [5:0]state, stateNext;
 
-parameter DataWriteP = 4, DataWriteR = 5,DataWriteA = 6,DataWriteN = 7,DataWriteAA = 8,DataWriteV = 9, GoHome = 4'ha, TriggerDelay = 4'hb, SetupDelay = 4'hc, DataWritePr = 4'hd, GoNextLine = 4'he, AddressChangeDelay = 4'hf;
+parameter DataWrite_ = 4, DataWriteU = 5,DataWriteE = 6,DataWriteS = 7,DataWriteT = 8,DataWriteI = 9, GoHome = 5'd10, TriggerDelay = 5'd11, SetupDelay = 5'd12, DataWriteQ = 5'd13, GoNextLine = 5'd14, AddressChangeDelay = 5'd15, DataWriteO = 5'd16, DataWriteN = 5'd17, VariableData = 5'd18;
 parameter FirstStep = 0, SecondStep = 1, ThirdStep = 2, InitializationComplete = 3;
 
 
@@ -44,7 +44,8 @@ timer4u genenable(clk, rst, EnableCount, en_lcd_gen);//enablegen
 TimerSetup SetupDelay_instance(clk, rst, EnableSetup, DisableSetup, FlagSetup);//special counter can be reset by both rst and DisableCounter
 TimerLatch GenLatchDelay(clk, rst, EnableLatch, DisableLatch, FlagHold);//special counter can be reset by both rst and DisableLatch
 AddressDelay GenAddressDelay(clk, rst, EnableAddress, DisableAddress, FlagAddress);
-BottonLogic_Kulkarni_P GenNewLine(clk, switch_up, BotPulse, rst);
+BottonLogic_Kulkarni_P GenNextLine(clk, BotNextLine, NextLinePulse, rst);
+BottonLogic_Kulkarni_P GenNewWord(clk, BotNew, NewPulse, rst);
 
 always@(posedge clk)
 begin
@@ -110,7 +111,7 @@ begin
 									en_oe <= 1'b1;
 									rw_lcd <= 1'b0;
 									rs_lcd <= 1'b0;
-									state <= DataWriteP;
+									state <= DataWrite_;
 								
 								end
 								else
@@ -121,7 +122,7 @@ begin
 							end
 			
 											
-													DataWriteP : begin
+													DataWrite_ : begin
 																				en_oe <= 1'b0;
 																				oe <= 1'b0;
 																				en_lcd_set <= 1'b1;
@@ -139,23 +140,24 @@ begin
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
 																						state <= SetupDelay;
-																						stateNext <= DataWritePr;
+																						stateNext <= DataWriteQ;
 																						
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
 																				begin
-																					state <= DataWriteP;
+																					state <= DataWrite_;
 																					
 																				end
 																			
 																		
 																		end
-													DataWriteR : begin
+													DataWriteU : begin
 																				en_oe <= 1'b0;
 																				oe <= 1'b0;
 																				rs_lcd <= 1'b0;
 																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
 																				if(data_lcd[7] == 1'b0)
 																				begin
 																					
@@ -164,28 +166,29 @@ begin
 																					rw_lcd <= 1'b0;
 																					
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01010010;
+																					DataWrite <= 8'b01010101;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
 																						state <= SetupDelay;
-																						stateNext <= DataWriteA;
+																						stateNext <= DataWriteE;
 																						
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
 																				begin
-																					state <= DataWriteR;
+																					state <= DataWriteU;
 																					
 																				end
 																			
 																		
 																		end
-													DataWriteA :begin
+													DataWriteE :begin
 																				en_oe <= 1'b0;
 																				oe <= 1'b0;
 																				rs_lcd <= 1'b0;
 																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
 																				if(data_lcd[7] == 1'b0)
 																				begin
 																					oe <= 1'b1;
@@ -193,28 +196,181 @@ begin
 																					rw_lcd <= 1'b0;
 																					
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01000001;
+																					DataWrite <= 8'b01000101;
+																					EnableLatch <= 1'b1;
+																					DisableLatch <= 1'b0;
+																					EnableSetup <= 1'b1;
+																						state <= SetupDelay;
+																						stateNext <= DataWriteS;
+																						
+																				  DisableSetup <= 1'b0;
+																				end
+																				else
+																				begin
+																					state <= DataWriteE;
+																					
+																				end
+																			
+																		
+																		end
+													DataWriteS :begin
+																				en_oe <= 1'b0;
+																				oe <= 1'b0;
+																				rs_lcd <= 1'b0;
+																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
+																				if(data_lcd[7] == 1'b0)
+																				begin
+																					oe <= 1'b1;
+																					rs_lcd <= 1'b1;
+																					rw_lcd <= 1'b0;
+																					
+																					en_lcd_set <= 1'b0;
+																					DataWrite <= 8'b01010011;
+																					EnableLatch <= 1'b1;
+																					DisableLatch <= 1'b0;
+																					EnableSetup <= 1'b1;
+																						state <= SetupDelay;
+																						stateNext <= DataWriteT;
+																						
+																				  DisableSetup <= 1'b0;
+																				end
+																				else
+																				begin
+																					state <= DataWriteS;
+																					
+																				end
+																			
+																		
+																		end
+													DataWriteT :begin
+																				en_oe <= 1'b0;
+																				oe <= 1'b0;
+																				rs_lcd <= 1'b0;
+																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
+																				if(data_lcd[7] == 1'b0)
+																				begin
+																					oe <= 1'b1;
+																					rs_lcd <= 1'b1;
+																					rw_lcd <= 1'b0;
+																					
+																					en_lcd_set <= 1'b0;
+																					DataWrite <= 8'b01010100;
+																					EnableLatch <= 1'b1;
+																					DisableLatch <= 1'b0;
+																					EnableSetup <= 1'b1;
+																						state <= SetupDelay;
+																						stateNext <= DataWriteI;
+																						
+																				  DisableSetup <= 1'b0;
+																				end
+																				else
+																				begin
+																					state <= DataWriteT;
+																					
+																				end
+																			
+																		
+																		end
+													DataWriteI : begin
+																				en_oe <= 1'b0;
+																				oe <= 1'b0;
+																				rs_lcd <= 1'b0;
+																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
+																				if(data_lcd[7] == 1'b0)
+																				begin
+																					oe <= 1'b1;
+																					rs_lcd <= 1'b1;
+																					rw_lcd <= 1'b0;
+																					
+																					en_lcd_set <= 1'b0;
+																					DataWrite <= 8'b01001001;
+																					EnableLatch <= 1'b1;
+																					DisableLatch <= 1'b0;
+																					EnableSetup <= 1'b1;
+																						state <= SetupDelay;
+																						stateNext <= DataWriteO;
+																						
+																				  DisableSetup <= 1'b0;
+																				end
+																				else
+																				begin
+																					state <= DataWriteI;
+																					
+																				end
+																			
+																		
+																		end
+													DataWriteQ : begin
+																				en_oe <= 1'b0;
+																				oe <= 1'b0;
+																				rs_lcd <= 1'b0;
+																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
+																				if(data_lcd[7] == 1'b0)
+																				begin
+																					oe <= 1'b1;
+																					rs_lcd <= 1'b1;
+																					rw_lcd <= 1'b0;
+																					
+																					en_lcd_set <= 1'b0;
+																					DataWrite <= 8'b01010001;
+																					EnableLatch <= 1'b1;
+																					DisableLatch <= 1'b0;
+																					EnableSetup <= 1'b1;
+																						state <= SetupDelay;
+																						stateNext <= DataWriteU;
+																					EnableAddress <= 1'b1;
+																					DisableAddress <= 1'b0;
+																				  DisableSetup <= 1'b0;
+																				end
+																				else
+																				begin
+																					state <= DataWriteQ;
+																					
+																				end
+																			
+																		
+																		end
+													DataWriteO : begin
+																				en_oe <= 1'b0;
+																				oe <= 1'b0;
+																				rs_lcd <= 1'b0;
+																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
+																				if(data_lcd[7] == 1'b0)
+																				begin
+																					oe <= 1'b1;
+																					rs_lcd <= 1'b1;
+																					rw_lcd <= 1'b0;
+																					
+																					en_lcd_set <= 1'b0;
+																					DataWrite <= 8'b01001111;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
 																						state <= SetupDelay;
 																						stateNext <= DataWriteN;
-																						
+																					EnableAddress <= 1'b1;
+																					DisableAddress <= 1'b0;
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
 																				begin
-																					state <= DataWriteA;
+																					state <= DataWriteO;
 																					
 																				end
 																			
 																		
 																		end
-													DataWriteN :begin
+													DataWriteN : begin
 																				en_oe <= 1'b0;
 																				oe <= 1'b0;
 																				rs_lcd <= 1'b0;
 																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
 																				if(data_lcd[7] == 1'b0)
 																				begin
 																					oe <= 1'b1;
@@ -227,8 +383,9 @@ begin
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
 																						state <= SetupDelay;
-																						stateNext <= DataWriteAA;
-																						
+																						stateNext <= GoHome;
+																					EnableAddress <= 1'b1;
+																					DisableAddress <= 1'b0;
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
@@ -239,71 +396,12 @@ begin
 																			
 																		
 																		end
-													DataWriteAA :begin
+													VariableData : begin
 																				en_oe <= 1'b0;
 																				oe <= 1'b0;
 																				rs_lcd <= 1'b0;
 																				rw_lcd <= 1'b1;
 																				en_lcd_set <= 1'b1;
-																				if(data_lcd[7] == 1'b0)
-																				begin
-																					oe <= 1'b1;
-																					rs_lcd <= 1'b1;
-																					rw_lcd <= 1'b0;
-																					
-																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01000001;
-																					EnableLatch <= 1'b1;
-																					DisableLatch <= 1'b0;
-																					EnableSetup <= 1'b1;
-																						state <= SetupDelay;
-																						stateNext <= DataWriteV;
-																						
-																				  DisableSetup <= 1'b0;
-																				end
-																				else
-																				begin
-																					state <= DataWriteAA;
-																					
-																				end
-																			
-																		
-																		end
-													DataWriteV : begin
-																				en_oe <= 1'b0;
-																				oe <= 1'b0;
-																				rs_lcd <= 1'b0;
-																				rw_lcd <= 1'b1;
-																				en_lcd_set <= 1'b1;
-																				if(data_lcd[7] == 1'b0)
-																				begin
-																					oe <= 1'b1;
-																					rs_lcd <= 1'b1;
-																					rw_lcd <= 1'b0;
-																					
-																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01010110;
-																					EnableLatch <= 1'b1;
-																					DisableLatch <= 1'b0;
-																					EnableSetup <= 1'b1;
-																						state <= SetupDelay;
-																						stateNext <= GoHome;
-																						
-																				  DisableSetup <= 1'b0;
-																				end
-																				else
-																				begin
-																					state <= DataWriteV;
-																					
-																				end
-																			
-																		
-																		end
-													DataWritePr : begin
-																				en_oe <= 1'b0;
-																				oe <= 1'b0;
-																				rs_lcd <= 1'b0;
-																				rw_lcd <= 1'b1;
 																				if(data_lcd[7] == 1'b0)
 																				begin
 																					oe <= 1'b1;
@@ -316,14 +414,14 @@ begin
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
 																						state <= SetupDelay;
-																						stateNext <= DataWriteR;
+																						stateNext <= GoHome;
 																					EnableAddress <= 1'b1;
 																					DisableAddress <= 1'b0;
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
 																				begin
-																					state <= DataWritePr;
+																					state <= VariableData;
 																					
 																				end
 																			
@@ -332,15 +430,39 @@ begin
 													GoHome : begin
 																	en_oe <= 1'b0;
 																	en_lcd_set <= 1'b0;
-																	if(BotPulse == 1'b1)
+																	if(NextLinePulse == 1'b1 && NewPulse == 1'b0)//go 40H address
 																	begin
-																	state <= GoNextLine;
+																	en_oe <= 1'b0;
+																	oe <= 1'b1;
+																	rs_lcd <= 1'b0;
+																   rw_lcd <= 1'b0;
+																	en_lcd_set <= 1'b0;
+																	DataWrite <= 8'b11000000;
+																	EnableLatch <= 1'b1;
+																	DisableLatch <= 1'b0;
+																	EnableSetup <= 1'b1;
+																	state <= SetupDelay;
+																	stateNext <= AddressChangeDelay;
+																	DisableSetup <= 1'b0;
+																	GoVariable <= 1'b1;
+																	GoBack <= 1'b0;
 																	end
-																	else
+																	else if(NextLinePulse == 1'b0 && NewPulse == 1'b1)//gohome
 																	begin
-																	
-																	
-																	state <= GoHome;
+																	en_oe <= 1'b0;
+																	oe <= 1'b1;
+																	rs_lcd <= 1'b0;
+																   rw_lcd <= 1'b0;
+																	en_lcd_set <= 1'b0;
+																	DataWrite <= 8'b10000000;
+																	EnableLatch <= 1'b1;
+																	DisableLatch <= 1'b0;
+																	EnableSetup <= 1'b1;
+																	state <= SetupDelay;
+																	stateNext <= AddressChangeDelay;
+																	DisableSetup <= 1'b0;
+																	GoVariable <= 1'b0;
+																	GoBack <= 1'b1;
 																	end
 																	end
 													GoNextLine : begin
@@ -421,9 +543,18 @@ begin
 												AddressChangeDelay : begin
 																				if(FlagAddress == 1'b1)
 																				begin
-																					state <= DataWriteV;
+																					if(GoBack == 1'b0 && GoVariable == 1'b1)//go 40H address
+																					begin
+																					state <= VariableData;
 																					DisableAddress <= 1'b1;
 																					green_led <= 1'b1;
+																					end
+																					else//go home
+																					begin
+																					state <= DataWrite_;
+																					DisableAddress <= 1'b1;
+																					green_led <= 1'b1;
+																					end
 																				end
 																				else
 																				begin
