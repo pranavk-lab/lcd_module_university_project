@@ -2,10 +2,10 @@
 //Pranav Kulkarni
 //1ms timer
 //Generates a 1ms pulse every 100us time interval when EnableCount is pulled high
-module TimerSetup(clock,rst,EnableCount,DisableCount, TimerIndicator);
+module AddressDelay(clock,rst,EnableCount, DisableCount, TimerIndicator);
   input clock, rst, EnableCount, DisableCount;
   output TimerIndicator;
-  
+
   reg TimerIndicator;
   reg [1:0] state;
   reg [15:0] LFSR;
@@ -14,7 +14,7 @@ module TimerSetup(clock,rst,EnableCount,DisableCount, TimerIndicator);
 
   always @(posedge clock)
   begin
-      if(rst == 1'b0 || DisableCount == 1'b1)
+      if(rst == 1'b0||DisableCount == 1'b1)
       begin
         LFSR <= 16'hffff;
         TimerIndicator <= 1'b0;
@@ -53,7 +53,7 @@ module TimerSetup(clock,rst,EnableCount,DisableCount, TimerIndicator);
     			 LFSR[13] <= LFSR[12];
     			 LFSR[14] <= LFSR[13];
     			 LFSR[15] <= LFSR[14];
-                         if(LFSR == 16'h68a6)//sequence that indicates 1us mark
+                         if(LFSR == 16'h4036)//sequence that indicates 100us mark
                              begin
                              TimerIndicator <= 1'b1;
                              state <= RestartCount;
@@ -78,7 +78,7 @@ module TimerSetup(clock,rst,EnableCount,DisableCount, TimerIndicator);
          endcase
        end
   end
- 
+  
 
 
   

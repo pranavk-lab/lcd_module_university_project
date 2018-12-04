@@ -1,5 +1,9 @@
-module DebugLcd(clk, rst, rs_lcd, rw_lcd, en_lcd, on_lcd,data_lcd, red_led, green_led);
+module DebugLcd(clk, rst, rs_lcd, rw_lcd, en_lcd, on_lcd,data_lcd, red_led, green_led, switch_up);
 input clk, rst;//general signals
+
+//debug
+input switch_up;
+
 
 //lcd
 output reg rs_lcd,rw_lcd; 
@@ -17,14 +21,14 @@ reg [4:0] count;
 //states
 reg [4:0]state, stateNext;
 
-parameter DataWriteP = 4, DataWriteR = 5,DataWriteA = 6,DataWriteN = 7,DataWriteAA = 8,DataWriteV = 9, GoHome = 4'ha, TriggerDelay = 4'hb, SetupDelay = 4'hc, DataWritePr = 4'hd;
+parameter DataWriteP = 4, DataWriteR = 5,DataWriteA = 6,DataWriteN = 7,DataWriteAA = 8,DataWriteV = 9, GoHome = 4'ha, TriggerDelay = 4'hb, SetupDelay = 4'hc, DataWritePr = 4'hd, GoNextLine = 4'he, AddressChangeDelay = 4'hf;
 parameter FirstStep = 0, SecondStep = 1, ThirdStep = 2, InitializationComplete = 3;
 
 
 //counter
 reg EnableCount = 1'b1;
-reg EnableSetup, DisableSetup, EnableLatch, DisableLatch, disable_en;
-wire flag1ms, flag15ms, flag5ms, flag100us, flag1ms_5ms, flagSetup, flagLatch, en_lcd_gen;
+reg EnableSetup, DisableSetup, EnableLatch, DisableLatch, disable_en, EnableAddress, DisableAddress;
+wire flag1ms, flag15ms, flag5ms, flag100us, flag1ms_5ms, FlagSetup, FlagHold, en_lcd_gen, FlagAddress;
 
 
 //debug red led
@@ -39,6 +43,8 @@ timer100u gen100us(en_lcd_gen, rst, flag5ms, flag100us);//special counter
 timer4u genenable(clk, rst, EnableCount, en_lcd_gen);//enablegen
 TimerSetup SetupDelay_instance(clk, rst, EnableSetup, DisableSetup, FlagSetup);//special counter can be reset by both rst and DisableCounter
 TimerLatch GenLatchDelay(clk, rst, EnableLatch, DisableLatch, FlagHold);//special counter can be reset by both rst and DisableLatch
+AddressDelay GenAddressDelay(clk, rst, EnableAddress, DisableAddress, FlagAddress);
+BottonLogic_Kulkarni_P GenNewLine(clk, switch_up, BotPulse, rst);
 
 always@(posedge clk)
 begin
@@ -118,6 +124,7 @@ begin
 													DataWriteP : begin
 																				en_oe <= 1'b0;
 																				oe <= 1'b0;
+																				en_lcd_set <= 1'b1;
 																				rs_lcd <= 1'b0;
 																				rw_lcd <= 1'b1;
 																				if(data_lcd[7] == 1'b0)
@@ -151,7 +158,7 @@ begin
 																				rw_lcd <= 1'b1;
 																				if(data_lcd[7] == 1'b0)
 																				begin
-																					green_led <= 1'b1;
+																					
 																					oe <= 1'b1;
 																					rs_lcd <= 1'b1;
 																					rw_lcd <= 1'b0;
@@ -237,6 +244,7 @@ begin
 																				oe <= 1'b0;
 																				rs_lcd <= 1'b0;
 																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
 																				if(data_lcd[7] == 1'b0)
 																				begin
 																					oe <= 1'b1;
@@ -266,6 +274,7 @@ begin
 																				oe <= 1'b0;
 																				rs_lcd <= 1'b0;
 																				rw_lcd <= 1'b1;
+																				en_lcd_set <= 1'b1;
 																				if(data_lcd[7] == 1'b0)
 																				begin
 																					oe <= 1'b1;
@@ -308,7 +317,8 @@ begin
 																					EnableSetup <= 1'b1;
 																						state <= SetupDelay;
 																						stateNext <= DataWriteR;
-																						
+																					EnableAddress <= 1'b1;
+																					DisableAddress <= 1'b0;
 																				  DisableSetup <= 1'b0;
 																				end
 																				else
@@ -322,16 +332,24 @@ begin
 													GoHome : begin
 																	en_oe <= 1'b0;
 																	en_lcd_set <= 1'b0;
+																	if(BotPulse == 1'b1)
+																	begin
+																	state <= GoNextLine;
+																	end
+																	else
+																	begin
+																	
 																	
 																	state <= GoHome;
-																		end
-													/*GoNextLine : begin
+																	end
+																	end
+													GoNextLine : begin
 																		en_oe <= 1'b0;
-																				oe <= 1'b0;
+																				/*oe <= 1'b0;
 																				rs_lcd <= 1'b0;
 																				rw_lcd <= 1'b1;
 																				if(data_lcd[7] == 1'b0)
-																				begin
+																				begin*/
 																					oe <= 1'b1;
 																					rs_lcd <= 1'b0;
 																					rw_lcd <= 1'b0;
@@ -341,19 +359,19 @@ begin
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
-																						stateInitialized <= SetupDelay;
-																						stateNext <= DataWriteV;
-																						state <= InitializationComplete;
+																						state <= SetupDelay;
+																						stateNext <= AddressChangeDelay;
+																						
 																				  DisableSetup <= 1'b0;
-																				end
+																				/*end
 																				else
 																				begin
-																					stateInitialized <= DataWriteP;
-																					state <= InitializationComplete;
-																				end
+																					state <= GoNextLine;
+																					
+																				end*/
 																			
 																		
-																		end*/
+																		end
 													TriggerDelay: begin
 																			if(FlagHold == 1'b1)
 																			begin
@@ -387,6 +405,7 @@ begin
 																						state <= TriggerDelay;
 																						
 																						DisableSetup <= 1'b1;
+																						
 																					end
 																					else
 																					begin
@@ -399,7 +418,19 @@ begin
 																		end					
 																	
 												
-												
+												AddressChangeDelay : begin
+																				if(FlagAddress == 1'b1)
+																				begin
+																					state <= DataWriteV;
+																					DisableAddress <= 1'b1;
+																					green_led <= 1'b1;
+																				end
+																				else
+																				begin
+																					state <= AddressChangeDelay;
+																					
+																				end
+																			end
 												
 											
 											 
