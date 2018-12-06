@@ -1,9 +1,8 @@
-module DebugLcd(clk, rst, rs_lcd, rw_lcd, en_lcd, on_lcd,data_lcd, red_led, green_led, BotNextLine, BotNew);
+module DebugLcd(clk, rst, rs_lcd, rw_lcd, en_lcd, on_lcd,data_lcd, red_led, green_led, NextLinePulse, NewPulse, DataGame, read_done);
 input clk, rst;//general signals
 
-//debug
-input BotNextLine, BotNew;
-
+input NextLinePulse, NewPulse;
+output reg read_done;
 
 //lcd
 output reg rs_lcd,rw_lcd; 
@@ -17,6 +16,10 @@ assign data_lcd = oe ? DataWrite : 8'bz;//lcd
 assign en_lcd = en_oe ? en_lcd_gen : en_lcd_set;//enable control
 reg [4:0] count;
 reg GoVariable, GoBack;
+input [7:0]DataGame;
+
+
+
 
 //states
 reg [5:0]state, stateNext;
@@ -44,8 +47,12 @@ timer4u genenable(clk, rst, EnableCount, en_lcd_gen);//enablegen
 TimerSetup SetupDelay_instance(clk, rst, EnableSetup, DisableSetup, FlagSetup);//special counter can be reset by both rst and DisableCounter
 TimerLatch GenLatchDelay(clk, rst, EnableLatch, DisableLatch, FlagHold);//special counter can be reset by both rst and DisableLatch
 AddressDelay GenAddressDelay(clk, rst, EnableAddress, DisableAddress, FlagAddress);
-BottonLogic_Kulkarni_P GenNextLine(clk, BotNextLine, NextLinePulse, rst);
-BottonLogic_Kulkarni_P GenNewWord(clk, BotNew, NewPulse, rst);
+//BottonLogic_Kulkarni_P GenNextLine(clk, BotNextLine, NextLinePulse, rst);
+//BottonLogic_Kulkarni_P GenNewWord(clk, BotNew, NewPulse, rst);
+
+
+
+
 
 always@(posedge clk)
 begin
@@ -83,6 +90,7 @@ begin
 								else
 								begin
 									state <= FirstStep;
+									
 								end
 							
 							end
@@ -96,10 +104,12 @@ begin
 									rw_lcd <= 1'b0;
 									rs_lcd <= 1'b0;
 									state <= ThirdStep;
+									
 								end
 								else
 								begin
 									state <= SecondStep;
+									
 								end
 						
 							end
@@ -117,6 +127,7 @@ begin
 								else
 								begin
 									state <= ThirdStep;
+									
 								end
 						
 							end
@@ -166,7 +177,7 @@ begin
 																					rw_lcd <= 1'b0;
 																					
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01010101;
+																					DataWrite <= 8'b01001100;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
@@ -196,7 +207,7 @@ begin
 																					rw_lcd <= 1'b0;
 																					
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01000101;
+																					DataWrite <= 8'b01010000;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
@@ -226,7 +237,7 @@ begin
 																					rw_lcd <= 1'b0;
 																					
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01010011;
+																					DataWrite <= 8'b01001000;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
@@ -254,9 +265,9 @@ begin
 																					oe <= 1'b1;
 																					rs_lcd <= 1'b1;
 																					rw_lcd <= 1'b0;
-																					
+																				
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01010100;
+																					DataWrite <= 8'b01000001;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
@@ -286,7 +297,7 @@ begin
 																					rw_lcd <= 1'b0;
 																					
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01001001;
+																					DataWrite <= 8'b01000010;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
@@ -316,7 +327,9 @@ begin
 																					rw_lcd <= 1'b0;
 																					
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01010001;
+																					
+																					DataWrite <= 8'b01000001;
+																					
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
@@ -347,7 +360,7 @@ begin
 																					rw_lcd <= 1'b0;
 																					
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01001111;
+																					DataWrite <= 8'b01000101;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
@@ -378,7 +391,7 @@ begin
 																					rw_lcd <= 1'b0;
 																					
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01001110;
+																					DataWrite <= 8'b01010100;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
@@ -408,8 +421,9 @@ begin
 																					rs_lcd <= 1'b1;
 																					rw_lcd <= 1'b0;
 																					
+																					read_done <= 1'b1;
 																					en_lcd_set <= 1'b0;
-																					DataWrite <= 8'b01010000;
+																					DataWrite <= DataGame;
 																					EnableLatch <= 1'b1;
 																					DisableLatch <= 1'b0;
 																					EnableSetup <= 1'b1;
@@ -430,7 +444,9 @@ begin
 													GoHome : begin
 																	en_oe <= 1'b0;
 																	en_lcd_set <= 1'b0;
-																	if(NextLinePulse == 1'b1 && NewPulse == 1'b0)//go 40H address
+																	
+																	read_done <= 1'b0;
+																	if(NextLinePulse == 1'b1)// && NewPulse == 1'b0)//go 40H address
 																	begin
 																	en_oe <= 1'b0;
 																	oe <= 1'b1;
@@ -447,7 +463,7 @@ begin
 																	GoVariable <= 1'b1;
 																	GoBack <= 1'b0;
 																	end
-																	else if(NextLinePulse == 1'b0 && NewPulse == 1'b1)//gohome
+																	/*else if(NextLinePulse == 1'b0 && NewPulse == 1'b1)//gohome
 																	begin
 																	en_oe <= 1'b0;
 																	oe <= 1'b1;
@@ -463,8 +479,14 @@ begin
 																	DisableSetup <= 1'b0;
 																	GoVariable <= 1'b0;
 																	GoBack <= 1'b1;
+																	end*/
+																	else
+																	begin
+																		state <= GoHome;
 																	end
-																	end
+																end
+																	
+														
 													GoNextLine : begin
 																		en_oe <= 1'b0;
 																				/*oe <= 1'b0;
