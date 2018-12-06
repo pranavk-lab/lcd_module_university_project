@@ -1,8 +1,8 @@
-module TopModule(clk, rst, data_lcd, rs_lcd, rw_lcd, en_lcd, on_lcd, GameStart, NextAlpha, red_led, green_led, Flag_led, SelectAlpha, red_led_controller, green_led_controller, Ram_led, Rom_led, Stabalize, CountUnit_7Seg, CountTenth_7Seg);
+module TopModule(clk, rst, data_lcd, rs_lcd, rw_lcd, en_lcd, on_lcd, GameStart, NextAlpha, red_led, green_led, Flag_led, SelectAlpha, red_led_controller, green_led_controller, Stabalize, CountUnit_7Seg, CountTenth_7Seg);
 input clk, rst, GameStart, NextAlpha, SelectAlpha, Stabalize;
 inout [7:0]data_lcd;
 output rs_lcd, rw_lcd, en_lcd, on_lcd;
-output red_led, green_led, red_led_controller, green_led_controller, Flag_led, Ram_led, Rom_led;
+output red_led, green_led, red_led_controller, green_led_controller, Flag_led;
 wire [7:0]DataGame;
 
 //score wires
@@ -14,7 +14,7 @@ output [6:0]CountUnit_7Seg, CountTenth_7Seg;
 
 
 DebugLcd lcd_module(clk, rst, rs_lcd, rw_lcd, en_lcd, on_lcd,data_lcd, red_led, green_led, NextLinePulse, NewPulse, DataGame, read_done);//next line pulse only
-GameController controller(clk, rst, GameStart, DataGame, read_done, NextLinePulse, NextAlpha, SelectAlpha, red_led_controller, green_led_controller, Flag_led, Stabalize, Score_increment, ReConfigCount, Ram_led, Rom_led);
+GameController controller(clk, rst, GameStart, DataGame, read_done, NextLinePulse, NextAlpha, SelectAlpha, red_led_controller, green_led_controller, Flag_led, Stabalize, Score_increment, ReConfigCount);
 
 
 //counter modules
