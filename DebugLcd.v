@@ -568,6 +568,7 @@ begin
 																					if(GoBack == 1'b0 && GoVariable == 1'b1)//go 40H address
 																					begin
 																					state <= VariableData;
+																					read_done <= 1'b1;
 																					DisableAddress <= 1'b1;
 																					green_led <= 1'b1;
 																					end

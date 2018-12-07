@@ -1,4 +1,4 @@
-module TopModule(clk, rst, data_lcd, rs_lcd, rw_lcd, en_lcd, on_lcd, GameStart, NextAlpha, red_led, green_led, Flag_led, SelectAlpha, red_led_controller, green_led_controller, Stabalize, CountUnit_7Seg, CountTenth_7Seg, TimerUnit_7Seg, TimerTenth_7Seg, pass_in, greenLed, idLed, pwdLed, IDLED, passIn_disp, reconfigButton);
+module TopModule(clk, rst, data_lcd, rs_lcd, rw_lcd, en_lcd, on_lcd, GameStart, NextAlpha, red_led, green_led, Flag_led, SelectAlpha, red_led_controller, green_led_controller, Stabalize, CountUnit_7Seg, CountTenth_7Seg, TimerUnit_7Seg, TimerTenth_7Seg, pass_in, );
 input clk, rst, GameStart, NextAlpha, SelectAlpha, Stabalize;
 inout [7:0]data_lcd;
 output rs_lcd, rw_lcd, en_lcd, on_lcd;
@@ -15,7 +15,7 @@ output [6:0]CountUnit_7Seg, CountTenth_7Seg, TimerUnit_7Seg, TimerTenth_7Seg;
 wire Txrts_tenth_timer;
 
 DebugLcd lcd_module(clk, rst, rs_lcd, rw_lcd, en_lcd, on_lcd,data_lcd, red_led, green_led, NextLinePulse, NewPulse, DataGame, read_done);//next line pulse only
-GameController controller(clk, rst, TimerEnable, DataGame, read_done, NextLinePulse, NextAccess, EnterAccess, red_led_controller, green_led_controller, Flag_led, Stabalize, Score_increment, ReConfigCount, DoNotBorrow_unit, ReConfig_access);
+GameController controller(clk, rst, GameStart, DataGame, read_done, NextLinePulse, NextAlpha, SelectAlpha, red_led_controller, green_led_controller, Flag_led, Stabalize, Score_increment, ReConfigCount, DoNotBorrow_unit, ReConfig_access);
 
 
 //counter modules
@@ -46,7 +46,6 @@ SevenSeg_Kulkarni_P TenthTDisp(TenthDigit, TimerTenth_7Seg);
   output greenLed, idLed, pwdLed, IDLED;
   output [6:0] passIn_disp;
   wire [15:0] ROM_ID;
-  input reconfigButton;
   
   
   wire SelectAlpha_pulse, NextAlpha_pulse, reconfigButton_pulse, GameStart_pulse, idOut,pwdOut, idChecked, passChecked, TimerEnable;
